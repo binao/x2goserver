@@ -46,7 +46,7 @@ use base 'Exporter';
 our @EXPORT=('db_listsessions','db_listsessions_all', 'db_getservers', 'db_getagent', 'db_resume', 'db_changestatus', 'db_getstatus',
              'db_getdisplays', 'db_insertsession', 'db_insertshadowsession', 'db_getports', 'db_insertport', 'db_rmport', 'db_createsession', 'db_insertmount',
              'db_getmounts', 'db_deletemount', 'db_getdisplay', 'dbsys_getmounts', 'dbsys_listsessionsroot',
-             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_deletemounts', 'db_listshadowsessions','db_listshadowsessions_all');
+             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_storehistoryroot', 'dbsys_deletemounts', 'db_listshadowsessions','db_listshadowsessions_all');
 
 my ($uname, $pass, $uid, $pgid, $quota, $comment, $gcos, $homedir, $shell, $expire) = getpwuid(getuid());
 
@@ -119,6 +119,43 @@ sub dbsys_rmsessionsroot
 	$sth=$dbh->prepare("delete from used_ports where session_id='$sid'");
 	$sth->execute() or die;
 	$sth->finish();
+	undef $dbh;
+	return 1;
+}
+
+sub dbsys_storehistoryroot
+{
+	init_db();
+	my $sid=shift or die "argument \"session_id\" missed";
+	$sid = sanitizer('x2gosid', $sid) or die "argument \"session_id\" malformed";
+	my $init_time;
+	my $server;
+	my $client;
+	my $uname;
+
+	my $dbh=DBI->connect("dbi:Pg:dbname=$db;host=$host;port=$port;sslmode=$sslmode", 
+	                     "$dbuser", "$dbpass",{AutoCommit => 1}) or die $_;					 
+	my $sth=$dbh->prepare("select server,
+	                       init_time,
+	                       client,
+	                       uname
+	                       from sessions
+	                       where session_id=?");
+	$sth->execute($sid) or die;
+
+	my @data;
+	if(@data = $sth->fetchrow_array){
+		$server=@data[0];
+		$init_time=@data[1];
+		$client=@data[2];
+		$uname=@data[3];
+	}
+	
+	my $sth=$dbh->prepare("insert into sessions_history(session_id,uname,server,client,init_time,last_time) 
+	values (?,?,?,?,?,now())");
+	$sth->execute($sid,$uname,$server,$client,$init_time) or die;
+	$sth->finish();
+	
 	undef $dbh;
 	return 1;
 }

@@ -56,7 +56,7 @@ use base 'Exporter';
 our @EXPORT=('db_listsessions','db_listsessions_all', 'db_getservers', 'db_getagent', 'db_resume', 'db_changestatus', 'db_getstatus',
              'db_getdisplays', 'db_insertsession', 'db_insertshadowsession', 'db_getports', 'db_insertport', 'db_rmport', 'db_createsession', 'db_createshadowsession', 'db_insertmount',
              'db_getmounts', 'db_deletemount', 'db_getdisplay', 'dbsys_getmounts', 'dbsys_listsessionsroot',
-             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_deletemounts', 'db_listshadowsessions','db_listshadowsessions_all', );
+             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_storehistoryroot', 'dbsys_deletemounts', 'db_listshadowsessions','db_listshadowsessions_all', );
 
 sub init_db
 {
@@ -87,6 +87,53 @@ sub dbsys_rmsessionsroot
 		die;
 	}
 	$sth->finish();
+	undef $dbh;
+	return 1;
+}
+
+sub dbsys_storehistoryroot
+{
+	my $dbh = init_db();
+	check_root();
+	my $sid=shift or die "argument \"session_id\" missed";
+	$sid = sanitizer('x2gosid', $sid) or die "argument \"session_id\" malformed";
+	my $init_time;
+	my $server;
+	my $client;
+	my $uname;
+
+	my $sth=$dbh->prepare("select server,
+	                       init_time,
+	                       client,
+	                       uname
+	                       from sessions
+	                       where session_id=?");
+	$sth->execute($sid);
+	if ($sth->err())
+	{
+		syslog('error', "storehistoryroot get session (SQLite3 session db backend) failed with exitcode: $sth->err()");
+		die;
+	}
+
+	my @data;
+	if(@data = $sth->fetchrow_array){
+		$server=@data[0];
+		$init_time=@data[1];
+		$client=@data[2];
+		$uname=@data[3];
+	}
+	$sth->finish();
+
+	my $sth=$dbh->prepare("insert into sessions_history (session_id, uname, server, client, init_time, last_time) 
+	values (?, ?, ?, ?, ?, datetime('now','localtime'))");
+	$sth->execute($sid,$uname,$server,$client,$init_time);
+	if ($sth->err())
+	{
+		syslog('error', "storehistoryroot insert session (SQLite3 session db backend) failed with exitcode: $sth->err()");
+		die;
+	}
+	$sth->finish();
+
 	undef $dbh;
 	return 1;
 }

@@ -22,7 +22,7 @@
 
 use strict;
 
-$ENV{'PATH'} = "/bin:/sbin:/usr/bin:/usr/sbin";
+$ENV{'PATH'} = "/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin";
 
 use Sys::Hostname;
 use Sys::Syslog qw( :standard :macros );
@@ -32,7 +32,7 @@ use X2Go::Config qw( get_config );
 use X2Go::Log qw( loglevel );
 use X2Go::SupeReNicer qw( superenice );
 use X2Go::Server::Agent qw( session_is_suspended session_is_running session_has_terminated );
-use X2Go::Server::DB qw( dbsys_rmsessionsroot );
+use X2Go::Server::DB qw( dbsys_storehistoryroot dbsys_rmsessionsroot );
 use X2Go::Utils qw( system_capture_stdout_output is_true );
 my $x2go_lib_path = system_capture_stdout_output("x2gopath", "libexec");
 use Getopt::Long;

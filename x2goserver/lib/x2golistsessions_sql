@@ -23,7 +23,7 @@
 use strict;
 use Sys::Syslog qw( :standard :macros );
 
-use X2Go::Server::DB qw(dbsys_listsessionsroot_all dbsys_listsessionsroot dbsys_rmsessionsroot);
+use X2Go::Server::DB qw(dbsys_storehistoryroot dbsys_listsessionsroot_all dbsys_listsessionsroot dbsys_rmsessionsroot);
 use X2Go::Log qw(loglevel);
 
 openlog($0,'cons,pid','user');
@@ -61,6 +61,8 @@ for ( $i=0;$i<@array;$i++)
 	if ((@ln[4] eq "F") && (!check_pid(@ln[0], @ln[1])))
 	{
 		my $sid = @ln[1];
+		dbsys_storehistoryroot($sid);
+		syslog('debug', "Storing finished session to X2Go db history, session ID: $sid");
 		dbsys_rmsessionsroot($sid);
 		syslog('debug', "Purging finished session from X2Go db, session ID: $sid");
 	}

@@ -167,6 +167,18 @@ if ($Config->param("backend") eq 'sqlite')
 		$sth->finish();
 
 		my $sth=$dbh->prepare("
+		                      create table sessions_history(
+		                      session_id varchar(500) primary key,
+		                      uname varchar(100) not null,
+		                      server varchar(100) not null,
+		                      client inet,
+		                      init_time timestamp not null default CURRENT_TIMESTAMP,
+		                      last_time timestamp not null default CURRENT_TIMESTAMP)
+		                      ");
+		$sth->execute() or die;
+		$sth->finish();
+
+		my $sth=$dbh->prepare("
 		                      create table messages(mess_id varchar(20) primary key, message text)
 		                      ");
 		$sth->execute() or die;
@@ -547,6 +559,17 @@ sub create_tables()
 	                      tekidata_port int,
 	                      creator_id text NOT NULL default current_user,
 	                      unique(display))
+	                      ");
+	$sth->execute() or die;
+
+	my $sth=$dbh->prepare("
+	                      create table sessions_history(
+	                      session_id text primary key,
+	                      uname text not null,
+	                      server text not null,
+	                      client inet,
+	                      init_time timestamp not null default now(),
+	                      last_time timestamp not null default now())
 	                      ");
 	$sth->execute() or die;
 

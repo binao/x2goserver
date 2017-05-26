@@ -66,7 +66,7 @@ use base 'Exporter';
 our @EXPORT=('db_listsessions','db_listsessions_all', 'db_getservers', 'db_getagent', 'db_resume', 'db_changestatus', 'db_getstatus', 
              'db_getdisplays', 'db_insertsession', 'db_insertshadowsession', 'db_getports', 'db_insertport', 'db_rmport', 'db_createsession', 'db_createshadowsession', 'db_insertmount', 
              'db_getmounts', 'db_deletemount', 'db_getdisplay', 'dbsys_getmounts', 'dbsys_listsessionsroot', 
-             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_deletemounts', 'db_listshadowsessions','db_listshadowsessions_all');
+             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_storehistoryroot', 'dbsys_deletemounts', 'db_listshadowsessions', 'db_listshadowsessions_all');
 
 sub dbsys_rmsessionsroot
 {
@@ -79,6 +79,19 @@ sub dbsys_rmsessionsroot
 	if($backend eq 'sqlite')
 	{
 		system_capture_merged_output("$x2go_lib_path/libx2go-server-db-sqlite3-wrapper", "rmsessionsroot", "$sid");
+	}
+}
+
+sub dbsys_storehistoryroot
+{
+	my $sid=shift or die "argument \"session_id\" missed";
+	if($backend eq 'postgres')
+	{
+		X2Go::Server::DB::PostgreSQL::dbsys_storehistoryroot($sid);
+	}
+	if($backend eq 'sqlite')
+	{
+		system_capture_merged_output("$x2go_lib_path/libx2go-server-db-sqlite3-wrapper", "storehistoryroot", "$sid");
 	}
 }
 
