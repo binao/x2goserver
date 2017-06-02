@@ -45,8 +45,9 @@ use base 'Exporter';
 
 our @EXPORT=('db_listsessions','db_listsessions_all', 'db_getservers', 'db_getagent', 'db_resume', 'db_changestatus', 'db_getstatus',
              'db_getdisplays', 'db_insertsession', 'db_insertshadowsession', 'db_getports', 'db_insertport', 'db_rmport', 'db_createsession', 'db_insertmount',
-             'db_getmounts', 'db_deletemount', 'db_getdisplay', 'dbsys_getmounts', 'dbsys_listsessionsroot',
-             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_storehistoryroot', 'dbsys_deletemounts', 'db_listshadowsessions','db_listshadowsessions_all');
+             'db_getmounts', 'db_deletemount', 'db_getdisplay', 'dbsys_getmounts', 'dbsys_listsessionsroot', 'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 
+	     'dbsys_listhistoryroot', 'dbsys_listhistoryroot_all', 'db_listhistory', 'db_listhistory_all', 'dbsys_storehistoryroot', 'dbsys_deletemounts', 
+	     'db_listshadowsessions','db_listshadowsessions_all');
 
 my ($uname, $pass, $uid, $pgid, $quota, $comment, $gcos, $homedir, $shell, $expire) = getpwuid(getuid());
 
@@ -170,6 +171,56 @@ sub dbsys_deletemounts
 	$sth->finish();
 	undef $dbh;
 	return 1;
+}
+
+sub dbsys_listhistoryroot
+{
+	init_db();
+	my @history;
+	my $server=shift or die "argument \"server\" missed";
+	my $dbh=DBI->connect("dbi:Pg:dbname=$db;host=$host;port=$port;sslmode=$sslmode", "$dbuser", "$dbpass",{AutoCommit => 1}) or die $_;
+	my $sth;
+	$sth=$dbh->prepare("select session_id, server,  client, uname
+		                    to_char(init_time,'YYYY-MM-DD\"T\"HH24:MI:SS'),
+		                    to_char(last_time,'YYYY-MM-DD\"T\"HH24:MI:SS')
+		                    from  sessions_history
+				    where server='$server'
+		                    order by init_time desc");
+
+	$sth->execute()or die;
+	my @data;
+	my $i=0;
+	while (@data = $sth->fetchrow_array) 
+	{
+		@history[$i++]=join('|',@data);
+	}
+	$sth->finish();
+	undef $dbh;
+	return @history;
+}
+
+sub dbsys_listhistoryroot_all
+{
+	init_db();
+	my @history;
+	my $dbh=DBI->connect("dbi:Pg:dbname=$db;host=$host;port=$port;sslmode=$sslmode", "$dbuser", "$dbpass",{AutoCommit => 1}) or die $_;
+	my $sth;
+	$sth=$dbh->prepare("select session_id, server,  client, uname
+		                    to_char(init_time,'YYYY-MM-DD\"T\"HH24:MI:SS'),
+		                    to_char(last_time,'YYYY-MM-DD\"T\"HH24:MI:SS')
+		                    from  sessions_history
+		                    order by init_time desc");
+
+	$sth->execute()or die;
+	my @data;
+	my $i=0;
+	while (@data = $sth->fetchrow_array) 
+	{
+		@history[$i++]=join('|',@data);
+	}
+	$sth->finish();
+	undef $dbh;
+	return @history;
 }
 
 sub dbsys_listsessionsroot
@@ -609,6 +660,56 @@ sub db_listsessions
 	$sth->finish();
 	undef $dbh;
 	return @sessions;
+}
+
+sub db_listhistory
+{
+	init_db();
+	my $server=shift or die "argument \"server\" missed";
+	my @history;
+	my $dbh=DBI->connect("dbi:Pg:dbname=$db;host=$host;port=$port;sslmode=$sslmode", "$dbuser", "$dbpass",{AutoCommit => 1}) or die $_;
+	my $sth;
+	$sth=$dbh->prepare("select session_id, server,  client, uname
+		                    to_char(init_time,'YYYY-MM-DD\"T\"HH24:MI:SS'),
+		                    to_char(last_time,'YYYY-MM-DD\"T\"HH24:MI:SS')
+		                    from  sessions_history_view
+				    where server='$server'
+		                    order by init_time desc");
+
+	$sth->execute()or die;
+	my @data;
+	my $i=0;
+	while (@data = $sth->fetchrow_array) 
+	{
+		@history[$i++]=join('|',@data);
+	}
+	$sth->finish();
+	undef $dbh;
+	return @history;
+}
+
+sub db_listhistory_all
+{
+	init_db();
+	my @history;
+	my $dbh=DBI->connect("dbi:Pg:dbname=$db;host=$host;port=$port;sslmode=$sslmode", "$dbuser", "$dbpass",{AutoCommit => 1}) or die $_;
+	my $sth;
+	$sth=$dbh->prepare("select session_id, server,  client, uname
+		                    to_char(init_time,'YYYY-MM-DD\"T\"HH24:MI:SS'),
+		                    to_char(last_time,'YYYY-MM-DD\"T\"HH24:MI:SS')
+		                    from  sessions_history_view
+		                    order by init_time desc");
+
+	$sth->execute()or die;
+	my @data;
+	my $i=0;
+	while (@data = $sth->fetchrow_array) 
+	{
+		@history[$i++]=join('|',@data);
+	}
+	$sth->finish();
+	undef $dbh;
+	return @history;
 }
 
 sub db_listsessions_all

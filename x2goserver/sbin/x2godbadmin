@@ -569,8 +569,17 @@ sub create_tables()
 	                      server text not null,
 	                      client inet,
 	                      init_time timestamp not null default now(),
-	                      last_time timestamp not null default now())
+	                      last_time timestamp not null default now(),
+			      creator_id text NOT NULL default current_user)
 	                      ");
+	$sth->execute() or die;
+
+	$sth=$dbh->prepare("
+	                   create VIEW sessions_history_view as
+	                   SELECT
+	                   session_id, server, status, init_time, client, last_time, uname from sessions_history
+	                   where creator_id = current_user
+	                   ");
 	$sth->execute() or die;
 
 	$sth=$dbh->prepare("

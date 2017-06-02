@@ -55,8 +55,9 @@ use base 'Exporter';
 
 our @EXPORT=('db_listsessions','db_listsessions_all', 'db_getservers', 'db_getagent', 'db_resume', 'db_changestatus', 'db_getstatus',
              'db_getdisplays', 'db_insertsession', 'db_insertshadowsession', 'db_getports', 'db_insertport', 'db_rmport', 'db_createsession', 'db_createshadowsession', 'db_insertmount',
-             'db_getmounts', 'db_deletemount', 'db_getdisplay', 'dbsys_getmounts', 'dbsys_listsessionsroot',
-             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_storehistoryroot', 'dbsys_deletemounts', 'db_listshadowsessions','db_listshadowsessions_all', );
+             'db_getmounts', 'db_deletemount', 'db_getdisplay', 'dbsys_getmounts', 'dbsys_listsessionsroot', 'db_listhistory_all', 'db_listhistory',
+             'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 'dbsys_storehistoryroot', 'dbsys_listhistoryroot', 'dbsys_listhistoryroot_all', 'dbsys_deletemounts', 
+	     'db_listshadowsessions','db_listshadowsessions_all', );
 
 sub init_db
 {
@@ -136,6 +137,49 @@ sub dbsys_storehistoryroot
 
 	undef $dbh;
 	return 1;
+}
+
+sub dbsys_listhistoryroot
+{
+	my $dbh = init_db();
+	check_root();
+	my $server=shift or die "argument \"server\" missed";
+	my @history;
+	my $sth=$dbh->prepare("select session_id, uname,server, client,
+		               strftime('%Y-%m-%dT%H:%M:%S',init_time),
+			       strftime('%Y-%m-%dT%H:%M:%S',last_time)
+	                       from sessions_history
+	                       where server=?  order by init_time desc");
+	$sth->execute($server);
+	if ($sth->err()) {
+		syslog('error', "listhistoryroot (SQLite3 session db backend) failed with exitcode: $sth->err()");
+		die();
+	}
+	my @history = fetchrow_array_datasets($sth);
+	$sth->finish();
+	undef $dbh;
+	return @history;
+}
+
+sub dbsys_listhistoryroot_all
+{
+	my $dbh = init_db();
+	check_root();
+	my @history;
+	my $sth=$dbh->prepare("select session_id, uname,server, client,
+		               strftime('%Y-%m-%dT%H:%M:%S',init_time),
+			       strftime('%Y-%m-%dT%H:%M:%S',last_time)
+	                       from sessions_history
+	                       order by init_time desc");
+	$sth->execute();
+	if ($sth->err()) {
+		syslog('error', "listhistoryroot_all (SQLite3 session db backend) failed with exitcode: $sth->err()");
+		die();
+	}
+	my @history = fetchrow_array_datasets($sth);
+	$sth->finish();
+	undef $dbh;
+	return @history;
 }
 
 sub dbsys_listsessionsroot
@@ -605,6 +649,47 @@ sub db_getdisplay
 	$sth->finish();
 	undef $dbh;
 	return $display;
+}
+
+sub db_listhistory
+{
+	my $dbh = init_db();
+	my $server=shift ord die "argument \"server\" missed";
+	my @history;
+	my $sth=$dbh->prepare("select session_id, uname,server, client,
+		               strftime('%Y-%m-%dT%H:%M:%S',init_time),
+			       strftime('%Y-%m-%dT%H:%M:%S',last_time)
+	                       from sessions_history
+	                       where server=? and uname=? order by init_time desc");
+	$sth->execute($server,$realuser);
+	if ($sth->err()) {
+		syslog('error', "listhistory (SQLite3 session db backend) failed with exitcode: $sth->err()");
+		die();
+	}
+	my @history = fetchrow_array_datasets($sth);
+	$sth->finish();
+	undef $dbh;
+	return @history;
+}
+
+sub db_listhistory_all
+{
+	my $dbh = init_db();
+	my @history;
+	my $sth=$dbh->prepare("select session_id, uname,server, client,
+		               strftime('%Y-%m-%dT%H:%M:%S',init_time),
+			       strftime('%Y-%m-%dT%H:%M:%S',last_time)
+	                       from sessions_history
+	                       where uname=? order by init_time desc");
+	$sth->execute($realuser);
+	if ($sth->err()) {
+		syslog('error', "listhistory_all (SQLite3 session db backend) failed with exitcode: $sth->err()");
+		die();
+	}
+	my @history = fetchrow_array_datasets($sth);
+	$sth->finish();
+	undef $dbh;
+	return @history;
 }
 
 sub db_listsessions
