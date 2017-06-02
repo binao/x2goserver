@@ -66,7 +66,7 @@ use base 'Exporter';
 our @EXPORT=('db_listsessions','db_listsessions_all', 'db_getservers', 'db_getagent', 'db_resume', 'db_changestatus', 'db_getstatus', 
              'db_getdisplays', 'db_insertsession', 'db_insertshadowsession', 'db_getports', 'db_insertport', 'db_rmport', 'db_createsession', 'db_createshadowsession', 'db_insertmount', 
              'db_getmounts', 'db_deletemount', 'db_getdisplay', 'dbsys_getmounts', 'dbsys_listsessionsroot', 'dbsys_listsessionsroot_all', 'dbsys_rmsessionsroot', 
-	     'dbsys_listhistoryroot',' dbsys_listhistoryroot_all', 'db_listhistory', 'db_listhistory_all', 'dbsys_storehistoryroot', 
+	     'dbsys_listhistoryroot','dbsys_listhistoryroot_all', 'db_listhistory', 'db_listhistory_all', 'dbsys_storehistoryroot', 
 	     'dbsys_deletemounts', 'db_listshadowsessions', 'db_listshadowsessions_all');
 
 sub dbsys_rmsessionsroot
@@ -516,7 +516,7 @@ sub db_listhistory_all
 	}
 	if ($backend eq 'sqlite')
 	{
-		return split("\n",system_capture_merged_output("$x2go_lib_path/libx2go-server-db-sqlite3-wrapper", "db_listhistory_all"));
+		return split("\n",system_capture_merged_output("$x2go_lib_path/libx2go-server-db-sqlite3-wrapper", "listhistory_all"));
 	}
 }
 

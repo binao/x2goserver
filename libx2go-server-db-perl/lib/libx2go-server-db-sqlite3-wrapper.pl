@@ -54,8 +54,8 @@ my $cmd=shift or die "command not specified";
 # call the corresponding function in the X2Go::Server:DB:SQLite3 package
 switch ($cmd)
 {
-	case /.*listsessions.*root/              { @result_list = eval("X2Go::Server::DB::SQLite3::dbsys_$cmd(\@ARGV)") }
-	case /.*(list.*sessions|getmounts).*/    { @result_list = eval("X2Go::Server::DB::SQLite3::db_$cmd(\@ARGV)") }
+	case /.*list.*(sessions|history).*root/              { @result_list = eval("X2Go::Server::DB::SQLite3::dbsys_$cmd(\@ARGV)") }
+	case /.*(list.*(sessions|history)|getmounts).*/    { @result_list = eval("X2Go::Server::DB::SQLite3::db_$cmd(\@ARGV)") }
 	case /.*(root|deletemounts)/             { $result = eval("X2Go::Server::DB::SQLite3::dbsys_$cmd(\@ARGV)") }
 	else                                     { $result = eval("X2Go::Server::DB::SQLite3::db_$cmd(\@ARGV)") }
 }

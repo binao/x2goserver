@@ -654,7 +654,7 @@ sub db_getdisplay
 sub db_listhistory
 {
 	my $dbh = init_db();
-	my $server=shift ord die "argument \"server\" missed";
+	my $server=shift or die "argument \"server\" missed";
 	my @history;
 	my $sth=$dbh->prepare("select session_id, uname,server, client,
 		               strftime('%Y-%m-%dT%H:%M:%S',init_time),
